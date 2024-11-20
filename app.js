@@ -4,39 +4,48 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const OMDB_API_KEY = process.env.OMDB_API_KEY;  
+const OMDB_BASE_URL = 'http://www.omdbapi.com/';
+const axiosInstance = axios.create({
+    baseURL: OMDB_BASE_URL,
+    timeout: 5000, 
+});
 
-// Базовый URL для TMDb API
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-
-// Эндпоинт 1: Получение списка популярных фильмов
 app.get('/movies/popular', async (req, res) => {
     try {
-        const response = await axios.get(`${TMDB_BASE_URL}/movie/popular`, {
+        const response = await axiosInstance.get('', {
             params: {
-                api_key: TMDB_API_KEY,
-                language: 'en-US',
+                apikey: OMDB_API_KEY,
+                s: 'Avengers',  
                 page: 1,
             },
         });
         res.json(response.data);
     } catch (error) {
+        console.error('Ошибка запроса:', error.message);
+        if (error.response) {
+            console.error('Статус:', error.response.status);
+            console.error('Данные ошибки:', error.response.data);
+        } else if (error.request) {
+            console.error('Запрос был сделан, но ответа нет:', error.request);
+        } else {
+            console.error('Неизвестная ошибка:', error.message);
+        }
         res.status(500).json({ error: 'Ошибка получения популярных фильмов' });
     }
 });
 
-// Эндпоинт 2: Поиск фильма по названию
 app.get('/movies/search', async (req, res) => {
-    const { query } = req.query; // Передаем параметр query
+    const { query } = req.query;
     if (!query) {
         return res.status(400).json({ error: 'Укажите параметр query' });
     }
     try {
-        const response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
+        const response = await axiosInstance.get('', {
             params: {
-                api_key: TMDB_API_KEY,
-                query,
-                language: 'en-US',
+                apikey: OMDB_API_KEY,
+                s: query, 
+                page: 1,
             },
         });
         res.json(response.data);
@@ -45,14 +54,13 @@ app.get('/movies/search', async (req, res) => {
     }
 });
 
-// Эндпоинт 3: Получение информации о фильме по ID
 app.get('/movies/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const response = await axios.get(`${TMDB_BASE_URL}/movie/${id}`, {
+        const response = await axiosInstance.get('', {
             params: {
-                api_key: TMDB_API_KEY,
-                language: 'en-US',
+                apikey: OMDB_API_KEY,
+                i: id,  
             },
         });
         res.json(response.data);
@@ -61,7 +69,6 @@ app.get('/movies/:id', async (req, res) => {
     }
 });
 
-// Запуск сервера
 app.listen(PORT, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);
 });
